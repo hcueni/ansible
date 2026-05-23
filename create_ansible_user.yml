@@ -1,0 +1,56 @@
+---
+- name: Create ansible user on all the hosts
+  hosts: all
+
+  tasks:
+    - name: Delete /tmp/ansible_tmp, if it exists
+      ansible.builtin.file:
+        path: /tmp/ansible_tmp
+        state: absent
+      become: true
+
+    - name: Create the ansible group
+      ansible.builtin.group:
+        name: ansible
+        state: present
+      become: true
+
+    - name: passwordless sudo for ansible
+      ansible.builtin.copy:
+        content: "%ansible ALL=(ALL:ALL) NOPASSWD:ALL\n"
+        dest: /etc/sudoers.d/ansible_nopasswd
+        mode: 0440
+      become: true
+
+    - name: Remove user amsible, if it exists
+      ansible.builtin.user:
+        name: amsible
+        state: absent
+      become: true
+
+    - name: Create ansible user in group ansible
+      ansible.builtin.user:
+        name: ansible
+        groups: ansible
+        append: yes
+        state: present
+        createhome: yes
+      become: true
+
+    - name: Create .ssh directory for ansible if it doesn't exist
+      ansible.builtin.file:
+        path: /home/ansible/.ssh/
+        state: directory
+        owner: ansible
+        group: ansible
+        mode: "0700"
+      become: true
+
+    - name: Copy authorized_keys for ansible
+      ansible.builtin.copy:
+        src: /home/hcueni1/.ssh/authorized_keys.ansible
+        dest: /home/ansible/.ssh/authorized_keys
+        owner: ansible
+        group: ansible
+        mode: "0600"
+      become: true
