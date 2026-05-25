@@ -1,0 +1,56 @@
+---
+- name: Change the search strings in /etc/netplan/50-cloud-init.yaml to match the new domains
+  hosts: all
+
+  tasks:
+    - name: Check if /etc/netplan/50-cloud-init.yaml exists and it to register
+      ansible.builtin.stat:
+        path: /etc/netplan/50-cloud-init.yaml
+      register: exist
+      become: true
+
+    - name: Replace in.hcinfotech.ch with cust.int.hscinfotech.ch
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: '^(.*- )cust\.int\.hc(.*)'
+        replace: '\1in.hc\2'
+      when: exist.stat.exists
+      become: true
+      notify:
+        - restart netplan
+
+    - name: Replace bkp.hcinfotech.ch with bkp.int.hscinfotech.ch
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: '^(.*- )bkp\.hc(.*)'
+        replace: '\1bkp.int.hc\2'
+      when: exist.stat.exists
+      become: true
+      notify:
+        - restart netplan
+
+    - name: Replace mgt.hcinfotech.ch with mgt.int.hscinfotech.ch
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: '^(.*- )mgt\.hc(.*)'
+        replace: '\1mgt.int.hc\2'
+      when: exist.stat.exists
+      become: true
+      notify:
+        - restart netplan
+
+    - name: Replace rec.hcinfotech.ch with rec.int.hscinfotech.ch
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: '^(.*- )rec\.hc(.*)'
+        replace: '\1rec.int.hc\2'
+      when: exist.stat.exists
+      become: true
+      notify:
+        - restart netplan
+
+  handlers:
+    - name: restart netplan
+      ansible.builtin.shell: netplan apply
+      when: exist.stat.exists
+      become: true
